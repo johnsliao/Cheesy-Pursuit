@@ -1,0 +1,334 @@
+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>Cheesy Pursuit</title>
+    </head>
+    <body>
+		<img id="p1" src="http://i.imgur.com/PKFF2Bi.png" style="position:absolute;left:0; top:0;"height="38" width="38">
+		<img id="p2" src="http://i.imgur.com/NgDP6Rl.png" style="position:absolute;left:0; top:0;"height="38" width="38">
+		<img id="cheese" src="http://i.imgur.com/x1bQvmK.png" style="position:absolute;left:0; top:0;"height="38" width="38">
+    	<h1>Cheesy Pursuit</h1>
+
+    	<!-- Instructions start here -->
+    	<div style = "position: absolute; left:900px; up:20px">
+    	<strong> Controls: </strong>
+    	<p>
+    	Player 1: W, A, S, D
+    	<p>
+    	Player 2: Arrow keys
+    	<p>
+    	<strong> Instructions: </strong> Whoever gets the cheese first wins. If players run into each other, both are teleported to a random part of the maze.
+    	</div>
+    	<!-- Instructions end here -->
+
+    	<canvas id="myCanvas" width="800" height="800" style="border:1px solid #c3c3c3;">
+		Your browser does not support the HTML5 canvas tag.
+		</canvas>
+		
+		<input type="text" id="demo">
+    	<script type="text/javascript">
+    		var totalX=800;
+    		var totalY=800;
+    		var side=40;
+    		var startX = 5;
+    		var startY=5;
+    		var done=false;
+    		var c = document.getElementById("myCanvas");
+			var ctx = c.getContext("2d");
+			var maze = new Array();
+			var pathX = new Array();
+			var pathY = new Array();
+			var stuck = new Array();
+			var p1x = 19;
+			var p1y = 0;
+			var p2x = 0;
+			var p2y = 0;
+			var goodAdjCells = new Array();	
+			var cx = 9;
+			var cy = 19;	
+			var game_over = false;
+			
+			document.onkeydown = checkKey;
+			
+			function checkKey(e) {
+			    
+				
+				e = e || window.event;
+				
+				if(!game_over){
+					if (e.keyCode == '37') {
+						// left arrow
+						if(!maze[p1x][p1y].wall[3]){
+							p1x--;
+							player1();
+						}
+					}
+					else if (e.keyCode == '38') {
+						// up arrow
+						if(!maze[p1x][p1y].wall[0]){
+							p1y--;
+							player1();
+						}
+					}
+					else if (e.keyCode == '39') {
+						// right arrow
+						if(!maze[p1x][p1y].wall[1]){
+							p1x++;
+							player1();
+						}
+					}
+					else if (e.keyCode == '40') {
+						//down arrow
+						if(!maze[p1x][p1y].wall[2]){
+							p1y++;
+							player1();
+						}
+					}
+					if (e.keyCode == '65') {
+						// w
+						if(!maze[p2x][p2y].wall[3]){
+							p2x--;
+							player2();
+						}
+					}
+					else if (e.keyCode == '87') {
+						// a
+						if(!maze[p2x][p2y].wall[0]){
+							p2y--;
+							player2();
+						}
+					}
+					else if (e.keyCode == '68') {
+						// s
+						if(!maze[p2x][p2y].wall[1]){
+							p2x++;
+							player2();
+						}
+					}
+					else if (e.keyCode == '83') {
+						//d
+						if(!maze[p2x][p2y].wall[2]){
+							p2y++;
+							player2();
+						}
+					}
+				}
+			}
+
+			var checkWon = function(){
+				if(p1x==cx && p1y===cy){
+						demo.value="P1 wins";
+						cx=-100;
+						cy=-100;
+						game_over=true;
+						drawCheese();
+					}
+				else if(p2x===cx && p2y===cy){
+						demo.value="P2 wins";
+						cx=-100;
+						cy=-100;
+						game_over=true;
+						drawCheese();
+					}
+				else
+					demo.value="N/A";
+			};
+			
+			var drawCheese = function(){
+					var element = document.getElementById("cheese");
+					element.style.left = parseInt(cx*40+10)+'px';
+					element.style.top = parseInt(cy*40+82)+'px';
+				
+			};
+
+			function check_collision(){
+				if(p1x == p2x && p1y == p2y){
+					p1x = Math.round(Math.random()*19);
+					p1y = Math.round(Math.random()*19);
+					p2x = Math.round(Math.random()*19);
+					p2y = Math.round(Math.random()*19);
+				}
+			}
+
+			var player1 = function (){
+					checkWon();
+					check_collision();
+					var element = document.getElementById("p1");
+            		element.style.left = parseInt(p1x*40+10)+'px';
+					element.style.top = parseInt(p1y*40+82)+'px';
+					
+					var element = document.getElementById("p2");
+            		element.style.left = parseInt(p2x*40+10)+'px';
+					element.style.top = parseInt(p2y*40+82)+'px';
+			};
+
+			var player2 = function (){
+					checkWon();
+					check_collision();
+					
+					var element = document.getElementById("p1");
+            		element.style.left = parseInt(p1x*40+10)+'px';
+					element.style.top = parseInt(p1y*40+82)+'px';
+					
+					var element = document.getElementById("p2");
+            		element.style.left = parseInt(p2x*40+10)+'px';
+					element.style.top = parseInt(p2y*40+82)+'px';
+			};
+			
+    		function cell(x,y,side){
+    			this.x=x;
+    			this.y=y;
+    			this.side=side;
+    			this.state="far";
+    			this.wall=[true,true,true,true];
+    			
+    			this.removeWall = function(direction){
+    				if(direction==="north")
+						this.wall[0]=false;
+					if(direction==="east")
+						this.wall[1]=false;
+					if(direction==="south")
+						this.wall[2]=false;
+					if(direction==="west")
+						this.wall[3]=false;
+    			};
+
+    			this.sketch = function(){
+    				ctx.beginPath();
+					if(this.wall[0]){
+						ctx.moveTo(x,y);
+						ctx.lineTo(x+side,y);
+					}
+					if(this.wall[1]){
+						ctx.moveTo(x+side,y);
+						ctx.lineTo(x+side,y+side);
+					}
+					if(this.wall[2]){
+						ctx.moveTo(x,y+side);
+						ctx.lineTo(x+side,y+side);
+					}
+					if(this.wall[3]){
+						ctx.moveTo(x,y);
+						ctx.lineTo(x,y+side);
+					}
+					ctx.stroke();
+    			};
+    		}
+
+    		var exists = function(x,y){
+    			if(x<0 || x>=totalX/side || y<0 || y>=totalY/side)
+    				return false;
+				else
+					return true;
+    		};
+			
+			for(var x = 0; x<totalX/side; x++){
+				maze[x]= new cell(x*side,y*side,side);
+				for(var y=0; y<totalY/side; y++){
+					maze[x][y]= new cell(x*side,y*side,side);
+					if(x===startX && y===startY){
+						maze[x][y].state="in";
+						pathX.push(x);
+						pathY.push(y);
+					}
+				}
+			}
+
+			var getDirX = function(direction, x){
+				if(direction==="east")
+					return x+1;
+				else if(direction==="west")
+					return x-1;
+				else
+					return x;
+			};
+
+			var getDirY= function(direction, y){
+				if(direction==="north")
+					return y-1;
+				else if(direction==="south")
+					return y+1;
+				else
+					return y;
+			};
+
+			var opposite = function(direction){
+				if(direction=="north")
+					return "south";
+				if(direction=="south")
+					return "north";
+				if(direction=="east")
+					return "west";
+				if(direction=="west")
+					return "east";
+			};
+
+			while(!done){
+				var lastElement=pathX.length-1;
+
+				//check if any unvisited cells ie, "far"
+				if(exists(pathX[lastElement],pathY[lastElement]-1) && maze[pathX[lastElement]][pathY[lastElement]-1].state==="far"){
+					goodAdjCells.push("north");
+				}
+				
+				if(exists(pathX[lastElement]+1,pathY[lastElement]) && maze[pathX[lastElement]+1][pathY[lastElement]].state==="far"){
+					goodAdjCells.push("east");
+				}
+				
+				if(exists(pathX[lastElement],pathY[lastElement]+1) && maze[pathX[lastElement]][pathY[lastElement]+1].state==="far"){
+					goodAdjCells.push("south");
+				}
+				
+				if(exists(pathX[lastElement]-1,pathY[lastElement]) && maze[pathX[lastElement]-1][pathY[lastElement]].state==="far"){
+					goodAdjCells.push("west");
+				}
+
+				var go = Math.floor(Math.random()*goodAdjCells.length);
+				
+				if(goodAdjCells.length!=0){
+				//move into cell
+					stuck.push(goodAdjCells[go]);
+					maze[pathX[lastElement]][pathY[lastElement]].removeWall(goodAdjCells[go]);
+					
+					pathX.push(getDirX(goodAdjCells[go], pathX[lastElement])); //x
+					pathY.push(getDirY(goodAdjCells[go], pathY[lastElement])); //y
+					
+					lastElement=pathX.length-1;
+					maze[pathX[lastElement]][pathY[lastElement]].removeWall(opposite(goodAdjCells[go]));
+					maze[pathX[lastElement]][pathY[lastElement]].state="in";
+				}
+				else{
+					//stuck! not adjacent cells are near
+					pathX.pop();
+					pathY.pop();
+				}
+
+				goodAdjCells.length=0; //empty the array
+
+				done = true;
+				
+				for(var x = 0; x<totalX/side; x++){
+					for(var y=0; y<totalY/side; y++){
+							if(maze[x][y].state==="far")
+								done=false;
+					}
+				}
+			}
+
+			for(var x = 0; x<totalX/side; x++){
+				for(var y=0; y<totalY/side; y++){
+						maze[x][y].sketch();
+				}
+			}
+
+			player1();
+			player2();
+			drawCheese();
+		</script>
+
+    </body>
+</html>
